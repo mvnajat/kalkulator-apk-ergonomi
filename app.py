@@ -15,7 +15,7 @@ st.set_page_config(
 # =====================================================================
 with st.sidebar:
     # 1. Logo atau Identitas Kampus/Kelas
-    st.image("https://www.figma.com/community/file/1193446104276170734/ui-mobile-app-ecampus-pelita-bangsa", width=80) # Contoh ikon industri, bisa diganti URL logo kampus
+    st.image("https://s3-alpha.figma.com/hub/file/2835750881/99ee9c23-2cfb-4398-bc67-47a535a9d683-cover.png", width=80) # Contoh ikon industri, bisa diganti URL logo kampus
     st.markdown("### 🎓 Teknik Industri")
     st.markdown("**Universitas Pelita Bangsa**")
     st.markdown("Kelas: **J253B**")
