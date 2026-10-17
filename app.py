@@ -10,7 +10,38 @@ st.set_page_config(
     page_icon="⚙️",
     layout="wide"
 )
-
+# =====================================================================
+# SIDEBAR (IDENTITAS & PANDUAN)
+# =====================================================================
+with st.sidebar:
+    # 1. Logo atau Identitas Kampus/Kelas
+    st.image("https://www.figma.com/community/file/1193446104276170734/ui-mobile-app-ecampus-pelita-bangsa", width=80) # Contoh ikon industri, bisa diganti URL logo kampus
+    st.markdown("### 🎓 Teknik Industri")
+    st.markdown("**Universitas Pelita Bangsa**")
+    st.markdown("Kelas: **J253B**")
+    
+    st.divider()
+    
+    # 2. Informasi Pembuat
+    st.markdown("#### 👨‍💻 Dibuat Oleh: Munajat")
+    st.markdown("Mahasiswa Teknik Industri")
+    st.markdown("*Kolaborator:* Web Praktikum APK & Ergonomi")
+    
+    st.divider()
+    
+    # 3. Panduan Singkat Penggunaan Web
+    st.markdown("#### 📖 Panduan Singkat:")
+    st.markdown(
+        """
+        1. **Tab 1 (Waktu Baku):** Masukkan data waktu (detik) dipisahkan koma, sesuaikan Westinghouse, lalu lihat grafik & unduh laporan Excel.
+        2. **Tab 2 (RULA):** Pilih posisi postur tubuh sesuai kondisi nyata untuk melihat skor risiko *Action Level*.
+        3. **Tab 3 (REBA):** Lakukan evaluasi seluruh tubuh secara komprehensif.
+        """
+    )
+    
+    st.divider()
+    st.caption("© 2026 - IE Toolkit Project")
+    
 # =====================================================================
 # MATRIKS LOOKUP TABLE RESMI RULA & REBA
 # =====================================================================
