@@ -371,7 +371,12 @@ LOGO = H("""
   <path d='M14 27 L21 12 L28 27 Z' fill='url(#lg)' opacity='.9'/>
 </svg>""")
 
-PAGES = ["Waktu Baku", "RULA Assessment", "REBA Assessment"]
+PAGES = [
+    "Modul 1 · Fisiologi", "Modul 2 · OWAS", "Waktu Baku",
+    "RULA Assessment", "REBA Assessment", "Modul 4 · Antropometri",
+    "Modul 5 · Antropometri Lanjutan", "Modul 6 · Temperatur",
+    "Modul 7 · Kebisingan", "Modul 8 · Pencahayaan",
+]
 
 with st.sidebar:
     st.markdown(
@@ -399,9 +404,10 @@ with st.sidebar:
     with st.expander("Panduan Singkat"):
         st.markdown(
             H("""
-            <div class='step'><b>01</b><span><u>Waktu Baku</u> — input data detik (pisah koma), atur Westinghouse, lihat grafik &amp; unduh Excel.</span></div>
-            <div class='step'><b>02</b><span><u>RULA</u> — pilih postur sesuai kondisi nyata untuk melihat <i>Action Level</i>.</span></div>
-            <div class='step'><b>03</b><span><u>REBA</u> — evaluasi seluruh tubuh secara komprehensif.</span></div>"""),
+            <div class='step'><b>01</b><span><u>Fisiologi</u> — bandingkan kondisi normal dan setelah aktivitas.</span></div>
+            <div class='step'><b>02</b><span><u>Postur</u> — gunakan OWAS, RULA, dan REBA sesuai postur yang diamati.</span></div>
+            <div class='step'><b>03</b><span><u>Waktu kerja</u> — masukkan waktu observasi dalam detik dan evaluasi waktu baku.</span></div>
+            <div class='step'><b>04–08</b><span><u>Antropometri &amp; lingkungan</u> — masukkan data pengukuran asli agar analisis dan ekspor relevan.</span></div>"""),
             unsafe_allow_html=True,
         )
     st.markdown("<div class='foot'>© 2026 · IE TOOLKIT PROJECT</div>", unsafe_allow_html=True)
@@ -484,9 +490,16 @@ REBA_TABLE_C = [
 # TOPBAR, TICKER & HERO (dinamis per halaman)
 # =====================================================================
 HERO = {
+    "Modul 1 · Fisiologi": ("Pengukuran respons fisiologis operator", "Fisiologi<br>Kerja"),
+    "Modul 2 · OWAS": ("Klasifikasi postur punggung, lengan, kaki dan beban", "OWAS<br>Assessment"),
     "Waktu Baku": ("Kalkulasi time study <b>real-time</b>", "Live Time Study<br>&amp; Uji Data"),
     "RULA Assessment": ("Penilaian anggota gerak atas · <b>Tabel A, B, C</b>", "Upper Limb<br>Assessment"),
     "REBA Assessment": ("Penilaian seluruh tubuh · <b>Tabel A, B, C</b>", "Entire Body<br>Assessment"),
+    "Modul 4 · Antropometri": ("Dimensi tubuh dan rancangan stasiun kerja", "Antropometri<br>Dasar"),
+    "Modul 5 · Antropometri Lanjutan": ("Uji statistik, keseragaman dan kecukupan data", "Antropometri<br>Lanjutan"),
+    "Modul 6 · Temperatur": ("Perbandingan hasil kerja pada kondisi dingin dan panas", "Temperatur<br>&amp; Output"),
+    "Modul 7 · Kebisingan": ("Perbandingan hasil kerja pada kondisi normal dan bising", "Kebisingan<br>&amp; Output"),
+    "Modul 8 · Pencahayaan": ("Perbandingan hasil kerja pada kondisi normal dan gelap", "Pencahayaan<br>&amp; Output"),
 }
 
 st.markdown(
@@ -796,6 +809,214 @@ if page == "Waktu Baku":
                     "Pastikan data pengamatan hanya berisi angka dan dipisahkan dengan tanda koma (,).")
 
 
+    # Pelengkap Modul 3: perbandingan faktor rating dan waktu baku.
+    with st.container(border=True):
+        grp("D", "Perbandingan Metode Rating Modul 3", "SCHUMMARD · WESTINGHOUSE · OBJEKTIF")
+        st.caption("Masukkan waktu observasi rata-rata dan nilai rating berdasarkan tabel praktikum. Nilai tabel Schummard/Objective harus diverifikasi dengan lembar modul yang digunakan.")
+        c1,c2,c3=st.columns(3)
+        obs_mean=c1.number_input("Waktu observasi rata-rata (detik)",0.01,100000.0,12.8,step=0.1,key="m3_obs")
+        allowance=c2.number_input("Allowance (%)",0.0,90.0,15.5,step=0.5,key="m3_allow")/100
+        sch_score=c3.number_input("Skor Schummard",0.0,120.0,60.0,step=1.0,key="m3_sch_score")
+        c1,c2,c3=st.columns(3)
+        west_rating=c1.number_input("Rating Westinghouse total (desimal)",-0.5,0.5,0.0,step=0.01,key="m3_west")
+        obj_total=c2.number_input("Total faktor kesulitan Objective (%)",-90.0,300.0,0.0,step=1.0,key="m3_obj")
+        obj_p1=c3.number_input("P1 Objective (Schummard / 60)",0.1,2.0,1.0,step=0.01,key="m3_obj_p1")
+        rating_sch=sch_score/60
+        rating_west=1+west_rating
+        rating_obj=obj_p1*(1+obj_total/100)
+        normal_sch=obs_mean*rating_sch; normal_west=obs_mean*rating_west; normal_obj=obs_mean*rating_obj
+        denom=max(0.01,1-allowance)
+        result_methods=pd.DataFrame([
+            {"Metode":"Schummard","Faktor rating":rating_sch,"Waktu normal (detik)":normal_sch,"Waktu baku (detik)":normal_sch/denom,"Output teoritis (unit/jam)":3600/(normal_sch/denom)},
+            {"Metode":"Westinghouse","Faktor rating":rating_west,"Waktu normal (detik)":normal_west,"Waktu baku (detik)":normal_west/denom,"Output teoritis (unit/jam)":3600/(normal_west/denom)},
+            {"Metode":"Objective","Faktor rating":rating_obj,"Waktu normal (detik)":normal_obj,"Waktu baku (detik)":normal_obj/denom,"Output teoritis (unit/jam)":3600/(normal_obj/denom)},
+        ])
+        st.dataframe(result_methods,use_container_width=True)
+        st.caption("Perhitungan aplikasi: rating Schummard = skor/60; Westinghouse = 1 + total rating; Objective = P1 × [1 + total faktor kesulitan/100]. Waktu baku dihitung Wn/(1−allowance) dan output = 3600/Wb. Sesuaikan konvensi dengan instruksi dosen/modul.")
+        b=io.BytesIO()
+        with pd.ExcelWriter(b,engine="openpyxl") as w: result_methods.to_excel(w,index=False,sheet_name="Perbandingan_Metode")
+        st.download_button("Unduh perbandingan Modul 3 (.xlsx)",b.getvalue(),"Laporan_Modul_3_Perbandingan_Metode.xlsx","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+# =====================================================================
+# MODUL TAMBAHAN 1, 2, 4, 5, 6, 7, 8
+# =====================================================================
+elif page == "Modul 1 · Fisiologi":
+    st.caption("Isi hasil pengukuran nyata. CVL dihitung dari denyut jantung; rumus ECPT/ECPM pada dokumen praktikum tidak terbaca sebagai teks, jadi tidak dibuat-buat di sini.")
+    with st.container(border=True):
+        grp("A", "Identitas Praktikum", "METADATA")
+        m1, m2, m3 = st.columns(3)
+        kelas = m1.text_input("Kelas", key="fis_kelas")
+        kelompok = m2.text_input("Kelompok", key="fis_kelompok")
+        tanggal = m3.date_input("Tanggal", key="fis_tanggal")
+        operator = st.text_input("Nama / kode operator", key="fis_operator")
+        a1, a2, a3 = st.columns(3)
+        usia = a1.number_input("Usia (tahun)", 1, 100, 20, key="fis_usia")
+        berat = a2.number_input("Berat badan (kg)", 1.0, 300.0, 60.0, key="fis_berat")
+        suhu = a3.number_input("Suhu tubuh (°C)", 30.0, 45.0, 36.5, step=0.1, key="fis_suhu")
+    with st.container(border=True):
+        grp("B", "Pengukuran Fisiologis", "HEART RATE")
+        st.write("Masukkan denyut jantung dalam bpm pada kondisi normal dan setelah aktivitas fisik.")
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown("**Kondisi normal**")
+            hr_rest = st.number_input("Denyut jantung istirahat (bpm)", 30, 220, 75, key="fis_hr_rest")
+            tekanan_rest = st.text_input("Tekanan darah (opsional)", placeholder="Contoh: 120/80", key="fis_bp_rest")
+            tulisan_rest = st.text_area("Catatan / hasil tulisan kondisi normal", key="fis_write_rest")
+        with c2:
+            st.markdown("**Setelah aktivitas fisik**")
+            hr_work = st.number_input("Denyut jantung setelah aktivitas (bpm)", 30, 240, 110, key="fis_hr_work")
+            tekanan_work = st.text_input("Tekanan darah setelah aktivitas (opsional)", placeholder="Contoh: 135/85", key="fis_bp_work")
+            tulisan_work = st.text_area("Catatan / hasil tulisan setelah aktivitas", key="fis_write_work")
+        st.markdown("**ECPT / ECPM**")
+        st.caption("Rumus ECPT/ECPM pada file modul berada pada elemen visual yang tidak terbaca dalam ekstraksi teks. Isi hasil perhitungan dari rumus di lembar praktikum agar tidak menggunakan rumus pengganti yang belum terverifikasi.")
+        ecpt = st.number_input("ECPT hasil hitung manual (sesuai satuan modul)", 0.0, 100000.0, 0.0, key="fis_ecpt")
+        ecpm = st.number_input("ECPM hasil hitung manual (sesuai satuan modul)", 0.0, 100000.0, 0.0, key="fis_ecpm")
+    hr_max = max(1, 220 - usia)
+    cvl = max(0.0, (hr_work - hr_rest) / max(1, hr_max - hr_rest) * 100) if hr_max > hr_rest else 0.0
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Denyut jantung maksimum estimasi", f"{hr_max} bpm")
+    c2.metric("Selisih denyut jantung", f"{hr_work - hr_rest} bpm")
+    c3.metric("CVL", f"{cvl:.2f}%")
+    st.caption("CVL menggunakan pendekatan umum: (HR kerja − HR istirahat) / (HR maksimum − HR istirahat) × 100%, dengan HR maksimum estimasi 220 − usia. Pastikan rumus ini sesuai arahan dosen/modul Anda.")
+    st.text_area("Analisis, kesimpulan, dan saran", key="fis_analisis")
+    df = pd.DataFrame([{"Item":"Kelas","Nilai":kelas},{"Item":"Kelompok","Nilai":kelompok},{"Item":"Tanggal","Nilai":str(tanggal)},{"Item":"Operator","Nilai":operator},{"Item":"Usia (tahun)","Nilai":usia},{"Item":"Berat badan (kg)","Nilai":berat},{"Item":"Suhu tubuh (°C)","Nilai":suhu},{"Item":"HR istirahat (bpm)","Nilai":hr_rest},{"Item":"HR setelah aktivitas (bpm)","Nilai":hr_work},{"Item":"Tekanan darah normal","Nilai":tekanan_rest},{"Item":"Tekanan darah setelah aktivitas","Nilai":tekanan_work},{"Item":"CVL (%)","Nilai":round(cvl,2)},{"Item":"ECPT hasil hitung manual","Nilai":ecpt},{"Item":"ECPM hasil hitung manual","Nilai":ecpm},{"Item":"Catatan normal","Nilai":tulisan_rest},{"Item":"Catatan setelah aktivitas","Nilai":tulisan_work},{"Item":"Analisis/kesimpulan/saran","Nilai":st.session_state.get('fis_analisis','')}])
+    buf=io.BytesIO()
+    with pd.ExcelWriter(buf, engine="openpyxl") as w: df.to_excel(w, index=False, sheet_name="Fisiologi")
+    st.download_button("Unduh laporan Modul 1 (.xlsx)", buf.getvalue(), "Laporan_Modul_1_Fisiologi.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+elif page == "Modul 2 · OWAS":
+    with st.container(border=True):
+        grp("A", "Identitas & Aktivitas", "POSTURE OBSERVATION")
+        c1,c2,c3=st.columns(3)
+        operator= c1.text_input("Operator", key="ow_operator")
+        aktivitas= c2.text_input("Aktivitas / stasiun", key="ow_activity", value="Menulis")
+        beban_kg= c3.number_input("Beban (kg)",0.0,200.0,0.0,step=0.5,key="ow_load")
+        c1,c2=st.columns(2)
+        back = c1.selectbox("Punggung (Back)",[(1,"1 — Tegak"),(2,"2 — Membungkuk"),(3,"3 — Memutar / miring"),(4,"4 — Membungkuk dan memutar")],format_func=lambda x:x[1],key="ow_back")[0]
+        arms = c2.selectbox("Lengan (Arms)",[(1,"1 — Kedua lengan di bawah bahu"),(2,"2 — Satu lengan di atas bahu"),(3,"3 — Kedua lengan di atas bahu")],format_func=lambda x:x[1],key="ow_arms")[0]
+        legs = st.selectbox("Kaki (Legs)",[(1,"1 — Duduk"),(2,"2 — Berdiri dengan dua kaki lurus"),(3,"3 — Berdiri dengan satu kaki lurus"),(4,"4 — Berdiri / jongkok dengan dua lutut ditekuk"),(5,"5 — Berdiri / jongkok dengan satu lutut ditekuk"),(6,"6 — Berlutut pada satu/dua lutut"),(7,"7 — Berjalan / bergerak")],format_func=lambda x:x[1],key="ow_legs")[0]
+        loadcat=st.selectbox("Kategori beban OWAS",[(1,"1 — ≤ 10 kg"),(2,"2 — 10–20 kg"),(3,"3 — > 20 kg")],format_func=lambda x:x[1],key="ow_loadcat")[0]
+        st.caption("Kode postur di atas mengikuti kategori OWAS umum. Skor tindakan OWAS resmi berasal dari kombinasi 4 kode; tabel matriks lengkap tidak tersedia sebagai teks pada dokumen yang diunggah, sehingga hasil tindakan di bawah merupakan skrining awal, bukan pengganti tabel matriks resmi.")
+    # Skrining konservatif untuk membantu interpretasi, bukan skor matriks OWAS resmi.
+    severity = (back in (3,4)) + (arms == 3) + (legs in (4,5,6)) + (loadcat == 3)
+    if severity == 0: action, advice = "Perlu konfirmasi matriks OWAS", "Postur relatif lebih netral; cocokkan kode 4 digit dengan tabel OWAS resmi."
+    elif severity <= 2: action, advice = "Perlu ditinjau", "Tinjau postur dan durasi paparan; verifikasi kategori tindakan menggunakan tabel OWAS resmi."
+    else: action, advice = "Prioritaskan evaluasi", "Kombinasi postur/beban menunjukkan faktor yang perlu segera dievaluasi; verifikasi skor tindakan pada tabel resmi."
+    st.metric("Kode postur OWAS", f"{back}-{arms}-{legs}-{loadcat}")
+    callout("warn", "SCREENING", action, advice)
+    catatan=st.text_area("Catatan observasi dan usulan perbaikan",key="ow_notes")
+    df=pd.DataFrame([{"Operator":operator,"Aktivitas":aktivitas,"Punggung":back,"Lengan":arms,"Kaki":legs,"Kategori beban":loadcat,"Beban aktual (kg)":beban_kg,"Kode OWAS":f"{back}-{arms}-{legs}-{loadcat}","Skrining":action,"Catatan":catatan}])
+    buf=io.BytesIO()
+    with pd.ExcelWriter(buf,engine="openpyxl") as w: df.to_excel(w,index=False,sheet_name="OWAS")
+    st.download_button("Unduh laporan OWAS (.xlsx)",buf.getvalue(),"Laporan_Modul_2_OWAS.xlsx","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+elif page == "Modul 4 · Antropometri":
+    dimensi = ["Tinggi badan tegak","Tinggi mata berdiri","Tinggi bahu berdiri","Tinggi siku berdiri","Panjang lengan bawah","Tinggi lutut","Jangkauan tangan","Rentang tangan","Tinggi dada tegak","Tinggi mata duduk","Tinggi badan duduk","Tinggi siku duduk","Tinggi pundak","Tinggi olecranon","Panjang pergelangan ke olecranon","Panjang kaki luar","Lebar pinggul","Lebar bahu","Panjang kepala","Lebar kepala","Diameter maksimum dari dagu","Dagu ke puncak kepala","Telinga ke puncak kepala","Telinga ke belakang kepala","Antara dua telinga","Mata ke puncak kepala","Mata ke belakang kepala","Antara dua pupil mata","Hidung ke puncak kepala","Hidung ke belakang kepala","Mulut ke puncak kepala","Lebar mulut"]
+    with st.container(border=True):
+        grp("A","Identitas Sampel & Dimensi Stasiun Kerja","DATA INPUT")
+        c1,c2,c3=st.columns(3)
+        kelas=c1.text_input("Kelas",key="ant_kelas"); kelompok=c2.text_input("Kelompok",key="ant_kelompok"); operator=c3.text_input("Kode responden",key="ant_resp")
+        st.markdown("**Dimensi tubuh (cm)**")
+        values={}
+        for i in range(0,len(dimensi),2):
+            c=st.columns(2)
+            for j in range(2):
+                idx=i+j
+                if idx < len(dimensi): values[dimensi[idx]]=c[j].number_input(dimensi[idx],0.0,300.0,0.0,step=0.1,key=f"ant_dim_{idx}")
+        st.markdown("**Dimensi fasilitas (cm)**")
+        furn={}
+        fc=["Panjang pintu","Lebar pintu","Tinggi pintu","Tebal pintu","Panjang meja","Lebar meja","Tinggi meja","Tebal meja","Tinggi kursi","Lebar kursi","Tinggi sandaran tangan","Sudut sandaran punggung"]
+        cols=st.columns(3)
+        for i,n in enumerate(fc): furn[n]=cols[i%3].number_input(n,0.0,500.0,0.0,step=0.5,key=f"ant_f_{i}")
+    st.info("Masukkan ukuran yang benar-benar diukur. Nilai 0 berarti belum diisi dan tidak akan ditafsirkan sebagai ukuran aktual.")
+    st.text_area("Analisis kesesuaian pintu, meja, kursi, rancangan/usulan, kesimpulan",key="ant_notes")
+    df1=pd.DataFrame([{"Dimensi tubuh":k,"Ukuran (cm)":v} for k,v in values.items() if v>0])
+    df2=pd.DataFrame([{"Fasilitas":k,"Ukuran (cm)":v} for k,v in furn.items() if v>0])
+    buf=io.BytesIO()
+    with pd.ExcelWriter(buf,engine="openpyxl") as w:
+        df1.to_excel(w,index=False,sheet_name="Dimensi_Tubuh"); df2.to_excel(w,index=False,sheet_name="Dimensi_Fasilitas")
+    st.download_button("Unduh laporan Antropometri (.xlsx)",buf.getvalue(),"Laporan_Modul_4_Antropometri.xlsx","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+elif page == "Modul 5 · Antropometri Lanjutan":
+    st.write("Tempel data antropometri sebagai CSV: baris pertama adalah nama dimensi, setiap baris berikutnya satu responden. Contoh: `Tinggi_Badan,Lebar_Pinggul,Jangkauan`.")
+    raw=st.text_area("Data CSV",value="Tinggi_Badan,Lebar_Pinggul,Jangkauan\n160,34,65\n165,36,68\n170,37,70\n172,38,72\n168,35,69\n175,40,74\n163,34,66\n180,42,78\n158,33,64\n169,37,70",height=220,key="ant5_csv")
+    confidence=st.selectbox("Tingkat kepercayaan untuk batas kontrol",["95% (k=2)","99% (k=3)"],key="ant5_conf")
+    k=2 if confidence.startswith("95") else 3
+    precision=st.number_input("Ketelitian uji kecukupan s (%)",1.0,25.0,5.0,step=0.5,key="ant5_precision")/100
+    try:
+        data=pd.read_csv(io.StringIO(raw)).apply(pd.to_numeric,errors="coerce").dropna(axis=1,how="all")
+        if data.empty or len(data)<2: st.warning("Masukkan setidaknya dua baris sampel numerik.")
+        else:
+            summaries=[]; outliers={}
+            for col in data.columns:
+                x=data[col].dropna().astype(float); n=len(x); mean=float(x.mean()); sd=float(x.std(ddof=1)) if n>1 else 0.0
+                bka=mean+k*sd; bkb=mean-k*sd; sumx=float(x.sum()); sumx2=float((x*x).sum())
+                n_req=((k/precision)*math.sqrt(max(0,n*sumx2-sumx**2))/abs(sumx))**2 if sumx else float("inf")
+                vals={f"P{q}":float(x.quantile(q/100)) for q in (5,10,50,90,95)}
+                outside=[int(i+1) for i,v in enumerate(x.tolist()) if v>bka or v<bkb]
+                outliers[col]=outside
+                summaries.append({"Dimensi":col,"N":n,"Rata-rata":mean,"SD sampel":sd,"BKA":bka,"BKB":bkb,"Min":float(x.min()),"Max":float(x.max()),"N' kecukupan":math.ceil(n_req) if math.isfinite(n_req) else None,"Status kecukupan":"Cukup" if n_req<=n else "Tidak cukup",**vals})
+            sdf=pd.DataFrame(summaries)
+            st.dataframe(sdf,use_container_width=True)
+            for col in data.columns:
+                with st.expander(f"Grafik kontrol — {col}"):
+                    chart=pd.DataFrame({"Sampel":range(1,len(data[col].dropna())+1),"Nilai":data[col].dropna().tolist()})
+                    st.line_chart(chart.set_index("Sampel"))
+                    row=sdf[sdf["Dimensi"]==col].iloc[0]
+                    st.caption(f"BKA={row['BKA']:.2f}; BKB={row['BKB']:.2f}. Indeks baris di luar batas: {outliers[col] or 'tidak ada'}.")
+            st.caption("Catatan: uji kecukupan menggunakan bentuk umum N' = [(k/s)·√(NΣx²−(Σx)²)/Σx]². Kuantil dihitung dari data empiris; ini bukan uji normalitas formal.")
+            buf=io.BytesIO()
+            with pd.ExcelWriter(buf,engine="openpyxl") as w:
+                data.to_excel(w,index=False,sheet_name="Data_Mentah"); sdf.to_excel(w,index=False,sheet_name="Statistik")
+            st.download_button("Unduh analisis Antropometri Lanjutan (.xlsx)",buf.getvalue(),"Laporan_Modul_5_Antropometri_Lanjutan.xlsx","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    except Exception as e:
+        st.error(f"CSV belum dapat diproses: {e}. Pastikan format CSV valid dan angka memakai titik desimal.")
+
+elif page in ("Modul 6 · Temperatur", "Modul 7 · Kebisingan", "Modul 8 · Pencahayaan"):
+    is_temp=page.startswith("Modul 6")
+    is_noise=page.startswith("Modul 7")
+    module_no=6 if is_temp else (7 if is_noise else 8)
+    label_a,label_b=("Dingin","Panas") if is_temp else (("Normal","Bising") if is_noise else ("Normal","Gelap"))
+    measure_label="Temperatur (°C)" if is_temp else ("Kebisingan (dB, opsional)" if is_noise else "Pencahayaan (lux, opsional)")
+    with st.container(border=True):
+        grp("A","Identitas & Kondisi Lingkungan","EXPERIMENT")
+        c1,c2,c3=st.columns(3)
+        operator=c1.text_input("Operator",key=f"env{module_no}_op")
+        kelas=c2.text_input("Kelas / kelompok",key=f"env{module_no}_class")
+        durasi=c3.number_input("Durasi percobaan (menit)",1,60,2,key=f"env{module_no}_duration")
+        c1,c2=st.columns(2)
+        with c1:
+            st.markdown(f"**Kondisi {label_a}**")
+            measure_a=st.number_input(f"{measure_label} — {label_a}",0.0,2000.0,20.0 if is_temp else 0.0,step=0.5,key=f"env{module_no}_measure_a")
+            out_a=[st.number_input(f"Output percobaan {i} — {label_a}",0,10000,0,key=f"env{module_no}_out_a_{i}") for i in range(1,4)]
+            err_a=[st.number_input(f"Kesalahan percobaan {i} — {label_a}",0,10000,0,key=f"env{module_no}_err_a_{i}") for i in range(1,4)]
+        with c2:
+            st.markdown(f"**Kondisi {label_b}**")
+            measure_b=st.number_input(f"{measure_label} — {label_b}",0.0,2000.0,30.0 if is_temp else 0.0,step=0.5,key=f"env{module_no}_measure_b")
+            out_b=[st.number_input(f"Output percobaan {i} — {label_b}",0,10000,0,key=f"env{module_no}_out_b_{i}") for i in range(1,4)]
+            err_b=[st.number_input(f"Kesalahan percobaan {i} — {label_b}",0,10000,0,key=f"env{module_no}_err_b_{i}") for i in range(1,4)]
+    def env_stats(outputs, errors):
+        avg=float(sum(outputs)/len(outputs)); err=float(sum(errors)/len(errors)); err_pct=(err/avg*100) if avg>0 else 0.0
+        good=max(0.0,avg-err); efficiency=(good/avg*100) if avg>0 else 0.0
+        return avg,err,err_pct,efficiency
+    sa=env_stats(out_a,err_a); sb=env_stats(out_b,err_b)
+    st.markdown("### Ringkasan hasil")
+    c1,c2,c3,c4=st.columns(4)
+    c1.metric(f"Rata-rata output {label_a}",f"{sa[0]:.2f}")
+    c2.metric(f"Rata-rata output {label_b}",f"{sb[0]:.2f}")
+    c3.metric(f"Kesalahan rata-rata {label_a}",f"{sa[2]:.2f}%")
+    c4.metric(f"Kesalahan rata-rata {label_b}",f"{sb[2]:.2f}%")
+    compare=pd.DataFrame({"Kondisi":[label_a,label_b],"Percobaan 1":[out_a[0],out_b[0]],"Percobaan 2":[out_a[1],out_b[1]],"Percobaan 3":[out_a[2],out_b[2]],"Rata-rata output":[sa[0],sb[0]],"Rata-rata kesalahan":[sa[1],sb[1]],"Kesalahan (%)":[sa[2],sb[2]],"Efisiensi (%)":[sa[3],sb[3]],measure_label:[measure_a,measure_b]})
+    st.bar_chart(compare.set_index("Kondisi")[["Rata-rata output","Kesalahan (%)","Efisiensi (%)"]])
+    st.dataframe(compare,use_container_width=True)
+    st.caption("Kesalahan (%) = rata-rata kesalahan / rata-rata output × 100. Efisiensi operasional di sini didefinisikan sebagai (rata-rata output − rata-rata kesalahan) / rata-rata output × 100; ini definisi analisis aplikasi, bukan rumus eksplisit yang tercetak pada modul.")
+    notes=st.text_area("Analisis hasil, kesimpulan dan saran",key=f"env{module_no}_notes")
+    buf=io.BytesIO()
+    with pd.ExcelWriter(buf,engine="openpyxl") as w:
+        compare.to_excel(w,index=False,sheet_name=f"Modul_{module_no}")
+        pd.DataFrame([{"Operator":operator,"Kelas/kelompok":kelas,"Durasi (menit)":durasi,"Analisis":notes}]).to_excel(w,index=False,sheet_name="Metadata")
+    st.download_button(f"Unduh laporan Modul {module_no} (.xlsx)",buf.getvalue(),f"Laporan_Modul_{module_no}.xlsx","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
 # =====================================================================
 # HALAMAN 2: SKORING POSTUR KERJA RULA
 # =====================================================================
@@ -960,7 +1181,7 @@ elif page == "RULA Assessment":
 # =====================================================================
 # HALAMAN 3: SKORING POSTUR KERJA REBA
 # =====================================================================
-else:
+elif page == "REBA Assessment":
     col_eba, col_ebb, col_ebres = st.columns([1.05, 1.05, 1.0], gap="large")
 
     with col_eba:
